@@ -1,0 +1,204 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+//using System.Drawing.Drawing2D;
+
+namespace gray
+{
+    public partial class imageprocess : Form
+    {
+        public imageprocess()
+        {
+            InitializeComponent();
+           
+        }
+
+        private void open_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog opnDlg = new OpenFileDialog();
+            opnDlg.Filter = "所有图像文件 | *.bmp; *.pcx; *.png; *.jpg; *.gif;"+ 
+                "*.tif; *.ico; *.dxf; *.cgm; *.cdr; *.wmf; *.eps; *.emf|" +
+                "位图( *.bmp; *.jpg; *.png;...) | *.bmp; *.pcx; *.png; *.jpg; *.gif; *.tif; *.ico|" +
+                "矢量图( *.wmf; *.eps; *.emf;...) | *.dxf; *.cgm; *.cdr; *.wmf; *.eps; *.emf";
+            opnDlg.Title = "打开图像文件";
+            opnDlg.ShowHelp = true;
+            if (opnDlg.ShowDialog() == DialogResult.OK)
+            {
+                curFileName = opnDlg.FileName;
+                try
+                {
+                    curBitmap = (Bitmap)Image.FromFile(curFileName);
+                    pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+                    this.pictureBox1.Image = curBitmap;
+                    this.pictureBox1.Refresh();
+                }
+                catch (Exception exp)
+                {
+                    MessageBox.Show(exp.Message);
+                }
+            }
+            Invalidate();
+        }
+
+        private void save_Click(object sender, EventArgs e)
+        {
+            if(curBitmap == null)
+            {
+                return;
+            }
+            SaveFileDialog saveDlg = new SaveFileDialog();
+            saveDlg.Title = "保存为";
+            saveDlg.OverwritePrompt = true;
+            saveDlg.Filter =
+                "BMP文件 (*.bmp) | *.bmp|" +
+                "Gif文件 (*.gif) | *.gif|" +
+                "JPEG文件 (*.jpg) | *.jpg|" +
+                "PNG文件 (*.png) | *.png";
+            saveDlg.ShowHelp = true;
+            if(saveDlg.ShowDialog() == DialogResult.OK)
+            {
+                string fileName = saveDlg.FileName;
+                string strFilExtn = fileName.Remove(0, fileName.Length - 3);
+                switch (strFilExtn)
+                {
+                    case "bmp":
+                        curBitmap.Save(fileName, System.Drawing.Imaging.ImageFormat.Bmp);
+                        break;
+                    case "jpg":
+                        curBitmap.Save(fileName, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        break;
+                    case "gif":
+                        curBitmap.Save(fileName, System.Drawing.Imaging.ImageFormat.Gif);
+                        break;
+                    case "tif":
+                        curBitmap.Save(fileName, System.Drawing.Imaging.ImageFormat.Tiff);
+                        break;
+                    case "png":
+                        curBitmap.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private void close_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void gray_Click(object sender, EventArgs e)
+        {
+            if(curBitmap != null)
+            {
+                Color curColor;
+                int ret;
+                for (int i = 0; i < curBitmap.Width; i++)
+                {
+                    for (int j = 0; j < curBitmap.Height ; j++)
+                    {
+                        curColor = curBitmap.GetPixel(i,j);
+                        ret = (int)(curColor.R * 0.299 + curColor.G * 0.587 + curColor.B * 0.114);
+                        curBitmap.SetPixel(i, j, Color.FromArgb(ret, ret, ret));
+                    }
+                }
+                Invalidate();
+                pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+                this.pictureBox1.Image = curBitmap;
+                this.pictureBox1.Refresh();
+            }
+        }
+
+        private void contrast_Click(object sender, EventArgs e)
+        {
+          对比度参数 frm2 = new 对比度参数();
+            frm2.ShowDialog();
+            string constr = "";
+            if (frm2.DialogResult == DialogResult.OK)
+            {
+                constr = frm2.tran;
+                frm2.Close();
+            } 
+            if (curBitmap != null)
+            {
+                Color c;
+                Bitmap temp = new Bitmap(curBitmap);
+                Bitmap bmap = (Bitmap)temp.Clone();
+
+                double contrast = Convert.ToInt32(constr);
+                if (contrast < -100)
+                {
+                    contrast = -100;
+                }
+                if (contrast > 100)
+                {
+                    contrast = 100;
+                }
+                contrast = (100.0 + contrast) / 100.0;
+                contrast *= contrast;
+
+                for (int i = 0; i < bmap.Width; i++)
+                {
+                    for (int j = 0; j < bmap.Height; j++)
+                    {
+                        c = bmap.GetPixel(i, j);
+                        double pR = c.R / 255.0;
+                        pR -= 0.5;
+                        pR *= contrast;
+                        pR += 0.5;
+                        pR *= 255;
+                        if (pR < 0)
+                        {
+                            pR = 0;
+                        }
+                        if (pR > 255)
+                        {
+                            pR = 255;
+                        }
+                        double pG = c.G / 255.0;
+                        pG -= 0.5;
+                        pG *= contrast;
+                        pG += 0.5;
+                        pG *= 255;
+                        if (pG < 0)
+                        {
+                            pG = 0;
+                        }
+                        if (pG > 255)
+                        {
+                            pG = 255;
+                        }
+                        double pB = c.B / 255.0;
+                        pB -= 0.5;
+                        pB *= contrast;
+                        pB += 0.5;
+                        pB *= 255;
+                        if (pB < 0)
+                        {
+                            pB = 0;
+                        }
+                        if (pB > 255)
+                        {
+                            pB = 255;
+                        }
+                        bmap.SetPixel(i, j, Color.FromArgb((byte)pR, (byte)pG, (byte)pB));
+                    }
+                    //Invalidate();
+                }
+                Invalidate();
+                pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+                this.pictureBox1.Image = bmap;
+                this.pictureBox1.Refresh();
+            }
+        }
+
+        private void imageprocess_Load(object sender, EventArgs e)
+        {
+
+        }      
+    }
+}
